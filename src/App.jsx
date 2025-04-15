@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import sonnetsData from "./data/sonnetsData";
 import Header from "./components/Header";
 import "./styles.css";
+
 export default function App() {
   const inputRef = useRef();
   const [searchInput, setSearchInput] = useState("");
@@ -9,7 +10,6 @@ export default function App() {
   function handleClick() {
     setSearchInput(inputRef.current.value.trim());
   }
-
   /* Challenge
 
   Kullanıcı " Arama " butonuna tıkladığında, input alanına yazdığı metin searchInput state'inin değeri olur (bu kod zaten yazılmıştı).    
@@ -20,25 +20,45 @@ export default function App() {
     3. "Love", "summer", "winter" ve "strange" gibi yaygın sözcüklerin yanı sıra "hello" ve "weird" gibi hiçbir sonede geçmeyen sözcükleri arayarak kodunuzu test edin.
 */
 
+  function highlightWords(line, searchTerm) {
+    if (!searchTerm) return line; // Eğer arama kelimesi yoksa tüm satırı olduğu gibi döndür.
+    const regex = new RegExp(`(${searchTerm})`, "gi");
+    return line.split(regex).map((part, index) =>
+      part.toLowerCase() === searchTerm.toLowerCase() ? (
+        <span key={index} className="highlight">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  }
+
+  const filteredSonnets = sonnetsData.filter((sonnet) =>
+    sonnet.lines.some((line) =>
+      line.toLowerCase().includes(searchInput.toLowerCase())
+    )
+  );
+
   return (
     <div className="wrapper">
       <Header searchProps={{ inputRef, handleClick }} />
 
       <div className="sonnets-container">
-        {sonnetsData
-          .filter((sonnet) =>
-            sonnet.lines.some((line) =>
-              line.toLowerCase().includes(searchInput.toLowerCase())
-            )
-          )
-          .map((sonnet) => (
+        {filteredSonnets.length > 0 ? (
+          filteredSonnets.map((sonnet) => (
             <div className="sonnet" key={sonnet.number}>
               <h3>{sonnet.number}</h3>
               {sonnet.lines.map((line, index) => (
-                <p key={index}>{line}</p>
+                <p key={index}>{highlightWords(line, searchInput)}</p>
               ))}
             </div>
-          ))}
+          ))
+        ) : (
+          <p className="no-results-message">
+            Ne yazık ki, araman sonucunda hiçbir şey bulamadın.
+          </p>
+        )}
       </div>
     </div>
   );
